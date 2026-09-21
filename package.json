@@ -1,0 +1,30 @@
+{
+  "name": "room-booking-alpro-hq",
+  "version": "1.0.0",
+  "description": "Dashboard Booking Ruang Meeting Kantor Pusat (HQ) Apotek Alpro — Terintegrasi Google Calendar & Google Sheets",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "test": "node scripts/test-api.js",
+    "test:production": "node scripts/test-google-production.js"
+  },
+  "keywords": [],
+  "author": "Apotek Alpro HQ",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "date-fns": "^4.4.0",
+    "googleapis": "^181.0.0",
+    "lucide-react": "^1.47.0",
+    "next": "^15.5.25",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apotekalpromaster/room-booking-alpro-hq.git"
+  }
+}

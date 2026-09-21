@@ -1,0 +1,15 @@
+import { NextResponse } from 'next/server';
+import { cancelBooking } from '../../../lib/bookingService.js';
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const result = await cancelBooking(body);
+    return NextResponse.json({ success: true, ...result });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: error.statusCode || 500 }
+    );
+  }
+}

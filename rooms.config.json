@@ -1,0 +1,82 @@
+[
+  {
+    "id": "ruang-a",
+    "name": "Ruang Genuine (Lt. 1)",
+    "floor": 1,
+    "zone": "Eksternal / Tamu Luar",
+    "capacity": 6,
+    "facilities": [],
+    "color": "#EF4444",
+    "colorId": "11"
+  },
+  {
+    "id": "ruang-b",
+    "name": "Ruang Welcoming (Lt. 1)",
+    "floor": 1,
+    "zone": "Eksternal / Tamu Luar",
+    "capacity": 4,
+    "facilities": [],
+    "color": "#F97316",
+    "colorId": "6"
+  },
+  {
+    "id": "ruang-c",
+    "name": "Ruang Knowledgeable (Lt. 1)",
+    "floor": 1,
+    "zone": "Eksternal / Tamu Luar",
+    "capacity": 4,
+    "facilities": [],
+    "color": "#EAB308",
+    "colorId": "5"
+  },
+  {
+    "id": "ruang-d",
+    "name": "Ruang Involved (Lt. 1)",
+    "floor": 1,
+    "zone": "Eksternal / Tamu Luar",
+    "capacity": 8,
+    "facilities": [],
+    "color": "#84CC16",
+    "colorId": "2"
+  },
+  {
+    "id": "ruang-e",
+    "name": "Ruang Considerate (Lt. 2)",
+    "floor": 2,
+    "zone": "Staff Internal",
+    "capacity": 6,
+    "facilities": [],
+    "color": "#22C55E",
+    "colorId": "10"
+  },
+  {
+    "id": "ruang-f",
+    "name": "Ruang Accountable (Lt. 2)",
+    "floor": 2,
+    "zone": "Staff Internal",
+    "capacity": 6,
+    "facilities": [],
+    "color": "#06B6D4",
+    "colorId": "7"
+  },
+  {
+    "id": "ruang-g",
+    "name": "Ruang Yong Xin Kaizen (Lt. 2)",
+    "floor": 2,
+    "zone": "Staff Internal",
+    "capacity": 8,
+    "facilities": [],
+    "color": "#3B82F6",
+    "colorId": "9"
+  },
+  {
+    "id": "ruang-h",
+    "name": "Ruang Alpro Kaizen (Lt. 4)",
+    "floor": 4,
+    "zone": "Staff Internal & Training",
+    "capacity": 20,
+    "facilities": [],
+    "color": "#A855F7",
+    "colorId": "3"
+  }
+]
