@@ -71,6 +71,18 @@ export default function BookingModal({
   }, [isOpen, initialRoomId, initialDate, initialStartTime]);
 
   // Validasi Hari Kerja (Senin - Jumat)
+  // Escape key handler untuk kenyamanan navigasi modal
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Validasi Hari Kerja (Senin - Jumat)
   useEffect(() => {
     if (!date) return;
     const [y, m, d] = date.split('-').map(Number);

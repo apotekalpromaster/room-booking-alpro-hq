@@ -15,6 +15,17 @@ export default function BookingDetailModal({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Escape key handler
+  React.useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && Boolean(booking)) {
+        onClose();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [booking, onClose]);
+
   if (!booking) return null;
 
   async function handleCancelSubmit(e) {
