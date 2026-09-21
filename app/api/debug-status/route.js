@@ -14,7 +14,6 @@ export async function GET() {
   const calendarId = getCalendarId();
   const spreadsheetId = getSpreadsheetId();
 
-  // Mask email for display safety (e.g., alpro-r...account.com)
   const maskedEmail = email
     ? (email.length > 20 ? `${email.slice(0, 10)}...${email.slice(-15)}` : email)
     : null;
@@ -24,13 +23,8 @@ export async function GET() {
     emailFullLength: email ? email.length : 0,
     hasPrivateKey: Boolean(privateKey),
     privateKeyLength: privateKey ? privateKey.length : 0,
-    privateKeyHasHeader: privateKey.includes('-----BEGIN PRIVATE KEY-----'),
-    privateKeyHasFooter: privateKey.includes('-----END PRIVATE KEY-----'),
     calendarId: calendarId || null,
     spreadsheetId: spreadsheetId || null,
-    detectedGoogleEnvKeys: Object.keys(process.env).filter(k =>
-      k.includes('GOOGLE') || k.includes('SHEET') || k.includes('CALENDAR') || k.includes('PRIVATE_KEY') || k.includes('CLIENT_EMAIL')
-    ),
   };
 
   const diagnostics = {
@@ -40,12 +34,13 @@ export async function GET() {
     isGoogleConfigured: isGoogleConfigured(),
     authTest: null,
     calendarTest: null,
+    driveDiscovery: null,
     sheetsTest: null,
   };
 
   const clients = getGoogleClients();
   if (!clients) {
-    diagnostics.message = 'getGoogleClients() returned null. Cek envCheck di atas untuk melihat variabel mana yang belum terpasang atau salah format.';
+    diagnostics.message = 'getGoogleClients() returned null.';
     return NextResponse.json(diagnostics);
   }
 
@@ -60,8 +55,7 @@ export async function GET() {
   } catch (err) {
     diagnostics.authTest = {
       success: false,
-      error: err.message,
-      code: err.code
+      error: err.message
     };
   }
 
@@ -82,59 +76,94 @@ export async function GET() {
     } catch (err) {
       diagnostics.calendarTest = {
         success: false,
-        calendarId: clients.calendarId,
-        error: err.message,
-        code: err.code
+        error: err.message
       };
     }
-  } else {
-    diagnostics.calendarTest = {
-      success: false,
-      error: 'calendarId belum diset di environment variables'
-    };
   }
 
-  // 3. Test Sheets
-  if (clients.spreadsheetId) {
+  // 3. Drive Discovery (Find exact spreadsheet ID shared with SA)
+  if (clients.drive) {
     try {
-      const meta = await clients.sheets.spreadsheets.get({
-        spreadsheetId: clients.spreadsheetId,
+      const driveRes = await clients.drive.files.list({
+        pageSize: 10,
+        fields: 'files(id, name, mimeType)',
       });
-      const tabs = (meta.data.sheets || []).map(s => s.properties?.title);
-
-      let sampleFasilitas = [];
-      try {
-        const facTab = tabs.find(t => t.toLowerCase().includes('fasilitas')) || tabs[0];
-        const valRes = await clients.sheets.spreadsheets.values.get({
-          spreadsheetId: clients.spreadsheetId,
-          range: `'${facTab}'!A1:F9`,
-        });
-        sampleFasilitas = valRes.data.values || [];
-      } catch (fErr) {
-        sampleFasilitas = [`Error: ${fErr.message}`];
-      }
-
-      diagnostics.sheetsTest = {
+      diagnostics.driveDiscovery = {
         success: true,
-        spreadsheetId: clients.spreadsheetId,
-        sheetTitle: meta.data.properties?.title,
-        availableTabs: tabs,
-        sampleFasilitasRowsCount: sampleFasilitas.length,
-        hasLogBookingTab: tabs.some(t => t.toLowerCase().includes('log booking')),
-        hasFasilitasTab: tabs.some(t => t.toLowerCase().includes('fasilitas'))
+        files: driveRes.data.files || []
       };
-    } catch (err) {
-      diagnostics.sheetsTest = {
+    } catch (dErr) {
+      diagnostics.driveDiscovery = {
         success: false,
-        spreadsheetId: clients.spreadsheetId,
-        error: err.message,
-        code: err.code
+        error: dErr.message
       };
     }
+  }
+
+  // 4. Candidate ID probe for Google Sheets
+  const candidates = [
+    spreadsheetId,
+    '1HzlStYQ2-yGxSN72l_-_99U3se1VGCtAgN3GCZCjeTs',
+    '1HzlStYQ2-yGxSN72L_-_99U3se1VGCtAgN3GCZCjeTs',
+    '1HzlStYQ2-yGxSN72l_-_99U3se1VGCtAgN3GCZCjEts',
+    '1HzlStYQ2-yGxSN72L_-_99U3se1VGCtAgN3GCZCjEts',
+    '1HzlStYQ2-yGxSN72l_-_99U3se1VGCtAgN3GCZCjets',
+    '1HzlStYQ2-yGxSN72L_-_99U3se1VGCtAgN3GCZCjets',
+    '1HzlStYQ2-yGxSN72l-_99U3se1VGCtAgN3GCZCjeTs',
+    '1HzlStYQ2-yGxSN72L-_99U3se1VGCtAgN3GCZCjeTs',
+    '1HzIStYQ2-yGxSN72l_-_99U3se1VGCtAgN3GCZCjeTs',
+    '1HzIStYQ2-yGxSN72L_-_99U3se1VGCtAgN3GCZCjeTs',
+    '1HzlStYQ2-yGxSN72l_-_99U3se1VGClAgN3GCZCjeTs',
+    '1HzlStYQ2-yGxSN72L_-_99U3se1VGClAgN3GCZCjeTs',
+  ].filter(Boolean);
+
+  // Deduplicate
+  const uniqueCandidates = [...new Set(candidates)];
+  let foundSheetMeta = null;
+  let successfulId = null;
+  const probeErrors = [];
+
+  for (const idToTry of uniqueCandidates) {
+    try {
+      const meta = await clients.sheets.spreadsheets.get({
+        spreadsheetId: idToTry,
+      });
+      foundSheetMeta = meta.data;
+      successfulId = idToTry;
+      break;
+    } catch (tryErr) {
+      probeErrors.push({ id: idToTry, error: tryErr.message });
+    }
+  }
+
+  if (foundSheetMeta && successfulId) {
+    const tabs = (foundSheetMeta.sheets || []).map(s => s.properties?.title);
+    let sampleRows = [];
+    try {
+      const facTab = tabs.find(t => t.toLowerCase().includes('fasilitas')) || tabs[0];
+      const valRes = await clients.sheets.spreadsheets.values.get({
+        spreadsheetId: successfulId,
+        range: `'${facTab}'!A1:F9`,
+      });
+      sampleRows = valRes.data.values || [];
+    } catch (rErr) {
+      sampleRows = [rErr.message];
+    }
+
+    diagnostics.sheetsTest = {
+      success: true,
+      matchedSpreadsheetId: successfulId,
+      sheetTitle: foundSheetMeta.properties?.title,
+      availableTabs: tabs,
+      sampleRowsCount: sampleRows.length,
+      sampleRows: sampleRows.slice(0, 3)
+    };
   } else {
     diagnostics.sheetsTest = {
       success: false,
-      error: 'spreadsheetId belum diset di environment variables'
+      testedCount: uniqueCandidates.length,
+      lastError: probeErrors[0]?.error || 'All candidate IDs failed',
+      errors: probeErrors.slice(0, 3)
     };
   }
 
