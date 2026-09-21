@@ -7,8 +7,6 @@ import {
   BookOpen,
   Settings2,
   X,
-  User,
-  Building2,
   ShieldCheck
 } from 'lucide-react';
 
@@ -248,60 +246,23 @@ export default function Sidebar({
           })}
         </nav>
 
-        {/* User Profile Footer */}
-        <div
-          style={{
-            padding: '16px',
-            borderTop: '1px solid var(--color-border)',
-            backgroundColor: '#FAFAFA',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              backgroundColor: 'var(--color-primary-light)',
-              color: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 700,
-              fontSize: '14px',
-              border: '2px solid #FED7AA'
-            }}
-          >
-            HA
-          </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-              Staff Internal HQ
-            </div>
-            <div style={{ fontSize: '11px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Building2 size={12} />
-              <span>Apotek Alpro Indonesia</span>
-            </div>
-          </div>
-        </div>
-
         {/* Copyright & Creator Footer */}
         <div
           style={{
-            padding: '12px 16px 14px 16px',
+            padding: '16px 18px',
             backgroundColor: '#FAFAFA',
-            borderTop: '1px solid #F3F4F6',
-            fontSize: '11px',
+            borderTop: '1px solid var(--color-border)',
+            fontSize: '11.5px',
             color: '#4B5563',
-            lineHeight: 1.45,
+            lineHeight: 1.5,
             textAlign: 'center'
           }}
         >
-          <div>© 2026 <strong>Apotek Alpro Indonesia</strong></div>
-          <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: 3 }}>
-            Dibuat oleh OASIS • Departemen OSS
+          <div style={{ fontWeight: 600, color: '#1F2937' }}>
+            © 2026 Apotek Alpro Indonesia
+          </div>
+          <div style={{ fontSize: '10.5px', color: '#6B7280', marginTop: 4 }}>
+            Dibuat oleh <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>OASIS</span> • Departemen OSS
           </div>
         </div>
       </aside>
