@@ -49,9 +49,13 @@ function AppContent() {
     try {
       const url = forceRefresh ? '/api/rooms?refresh=true' : '/api/rooms';
       const res = await fetch(url);
+      if (!res.ok) {
+        console.warn('API /api/rooms returned non-200 status:', res.status);
+        return;
+      }
       const data = await res.json();
-      if (data.success) {
-        setRooms(data.data || []);
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        setRooms(data.data);
         if (data.source) setRoomsSource(data.source);
       }
     } catch (err) {
@@ -65,6 +69,11 @@ function AppContent() {
     setLoading(true);
     try {
       const res = await fetch(`/api/availability?date=${date}`);
+      if (!res.ok) {
+        console.warn('API /api/availability returned non-200 status:', res.status);
+        setBookings([]);
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setBookings(data.events || []);

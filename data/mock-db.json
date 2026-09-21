@@ -152,9 +152,54 @@
       "keperluan": "Audit Internal SOP Kebersihan & Pelayanan",
       "status": "CANCELLED",
       "created": "2026-09-21T04:23:11.337Z"
+    },
+    {
+      "id": "evt-1789972661419",
+      "bookingId": "BK-MUAVI8WQ-7YA1",
+      "roomId": "ruang-b",
+      "roomName": "Ruang Welcoming (Lt. 1)",
+      "floor": 1,
+      "zone": "Eksternal / Tamu Luar",
+      "date": "2026-10-05",
+      "startTime": "10:00",
+      "endTime": "12:00",
+      "name": "Ahmad Fauzi",
+      "divisi": "Operasional & QA",
+      "whatsapp": "081234567890",
+      "keperluan": "Audit Internal SOP Kebersihan & Pelayanan",
+      "status": "CANCELLED",
+      "created": "2026-09-21T06:37:41.419Z"
     }
   ],
   "logs": [
+    {
+      "timestamp": "21/9/2026, 13.37.41",
+      "bookingId": "BK-MUAVI8WQ-7YA1",
+      "roomName": "Ruang Welcoming (Lt. 1)",
+      "floor": 1,
+      "action": "CANCELLED",
+      "name": "Ahmad Fauzi",
+      "divisi": "Operasional & QA",
+      "whatsapp": "081234567890",
+      "slot": "2026-10-05 10:00 - 12:00",
+      "keperluan": "Audit Internal SOP Kebersihan & Pelayanan",
+      "eventId": "evt-1789972661419",
+      "cancelReason": "Jadwal audit dimajukan"
+    },
+    {
+      "timestamp": "21/9/2026, 13.37.41",
+      "bookingId": "BK-MUAVI8WQ-7YA1",
+      "roomName": "Ruang Welcoming (Lt. 1)",
+      "floor": 1,
+      "action": "CREATED",
+      "name": "Ahmad Fauzi",
+      "divisi": "Operasional & QA",
+      "whatsapp": "081234567890",
+      "slot": "2026-10-05 10:00 - 12:00",
+      "keperluan": "Audit Internal SOP Kebersihan & Pelayanan",
+      "eventId": "evt-1789972661419",
+      "cancelReason": "-"
+    },
     {
       "timestamp": "21/9/2026, 11.23.11",
       "bookingId": "BK-MUAQP9YQ-JK7N",

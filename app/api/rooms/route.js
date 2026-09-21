@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRoomsWithDynamicFacilities } from '../../../lib/roomsConfig.js';
+import { getRoomsWithDynamicFacilities, DEFAULT_ROOMS } from '../../../lib/roomsConfig.js';
 
 export async function GET(request) {
   try {
@@ -10,14 +10,17 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
-      data: rooms,
-      source
+      data: rooms && rooms.length > 0 ? rooms : DEFAULT_ROOMS,
+      source: source || 'local-config'
     });
   } catch (error) {
-    console.error('Error fetching rooms API:', error);
-    return NextResponse.json(
-      { success: false, message: error.message },
-      { status: 500 }
-    );
+    console.error('Error in /api/rooms route:', error);
+    // Jangan pernah biarkan endpoint rooms gagal dengan status 500
+    return NextResponse.json({
+      success: true,
+      data: DEFAULT_ROOMS,
+      source: 'fallback-error',
+      warning: error.message
+    });
   }
 }
