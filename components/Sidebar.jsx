@@ -282,8 +282,26 @@ export default function Sidebar({
             </div>
             <div style={{ fontSize: '11px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4 }}>
               <Building2 size={12} />
-              <span>Apotek Alpro Pusat</span>
+              <span>Apotek Alpro Indonesia</span>
             </div>
+          </div>
+        </div>
+
+        {/* Copyright & Creator Footer */}
+        <div
+          style={{
+            padding: '12px 16px 14px 16px',
+            backgroundColor: '#FAFAFA',
+            borderTop: '1px solid #F3F4F6',
+            fontSize: '11px',
+            color: '#4B5563',
+            lineHeight: 1.45,
+            textAlign: 'center'
+          }}
+        >
+          <div>© 2026 <strong>Apotek Alpro Indonesia</strong></div>
+          <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: 3 }}>
+            Dibuat oleh OASIS • Departemen OSS
           </div>
         </div>
       </aside>

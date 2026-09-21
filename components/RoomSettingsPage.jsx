@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   RefreshCw,
   FileSpreadsheet,
-  Info,
   ShieldCheck
 } from 'lucide-react';
 
@@ -122,26 +121,6 @@ export default function RoomSettingsPage({ rooms = [], source = 'local-config', 
               <span>{isRefreshing ? 'Memperbarui...' : 'Sinkronkan Fasilitas'}</span>
             </button>
           )}
-        </div>
-      </div>
-
-      {/* GA Instruction Card */}
-      <div
-        style={{
-          backgroundColor: '#FFFBEB',
-          border: '1px solid #FDE68A',
-          borderRadius: '12px',
-          padding: '14px 18px',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 12,
-          fontSize: '12.5px',
-          color: '#92400E',
-        }}
-      >
-        <Info size={18} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
-        <div>
-          <strong>Info Manajemen Fasilitas (General Affairs):</strong> Tim GA dapat menambah, mengubah, atau memperbarui fasilitas fisik di setiap ruang kapan saja cukup melalui Google Spreadsheet tab <code>Fasilitas Ruangan</code>. Sistem akan otomatis merefleksikan perubahan di antarmuka booking tanpa perlu merombak atau redeploy kode sumber.
         </div>
       </div>
 
