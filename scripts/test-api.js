@@ -9,6 +9,7 @@ import {
   getAvailability,
   getHistory
 } from '../lib/bookingService.js';
+import { getRoomById } from '../lib/roomsConfig.js';
 
 async function runTests() {
   console.log('--- STARTING ROOM BOOKING BACKEND VERIFICATION ---');
@@ -132,6 +133,13 @@ async function runTests() {
   assert.ok(cancelledLog, 'Log CANCELLED harus ada');
   assert.strictEqual(cancelledLog.cancelReason, 'Jadwal audit dimajukan');
   console.log('✅ Audit log correctly recorded CREATED and CANCELLED entries');
+
+  // 9. Room Capacity Verification (Ruang Alpro Kaizen Lt. 4)
+  console.log('Test 9: Room Capacity Verification');
+  const ruangH = getRoomById('ruang-h');
+  assert.ok(ruangH, 'Ruang H harus ditemukan');
+  assert.strictEqual(ruangH.capacity, 35, 'Kapasitas Ruang Alpro Kaizen harus 35 orang');
+  console.log('✅ Ruang Alpro Kaizen (Lt. 4) capacity verified: 35 orang');
 
   console.log('--- ALL BACKEND TESTS PASSED SUCCESSFULLY! ---');
 }

@@ -27,7 +27,7 @@ Aplikasi internal berbasis web untuk pemesanan terpusat 8 ruang meeting Kantor P
     - 🔵 **Ruang Accountable (Lt. 2):** Kapasitas 6 Orang • Staff Internal
     - 🔵 **Ruang Yong Xin Kaizen (Lt. 2):** Kapasitas 8 Orang • Staff Internal
   - **Lantai 4 — Khusus Staff Internal & Training Pleno (1 Ruangan):**
-    - 🟣 **Ruang Alpro Kaizen (Lt. 4):** Kapasitas 20 Orang • Internal & Pelatihan
+    - 🟣 **Ruang Alpro Kaizen (Lt. 4):** Kapasitas 35 Orang • Internal & Pelatihan
 - **Fasilitas Inventaris Dinamis (General Affairs):**
   Dikelola langsung melalui **Google Spreadsheet (Tab Fasilitas Ruangan)** tanpa perlu hard-coding atau redeploy aplikasi.
 

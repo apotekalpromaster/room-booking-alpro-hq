@@ -126,7 +126,7 @@ export default function GuidePage() {
               Internal & Training Pleno
             </div>
             <p style={{ fontSize: '12px', color: '#7E22CE', marginTop: 6, lineHeight: 1.5 }}>
-              Ruang H (20 org).
+              Ruang H (35 org).
               Ruang rapat besar serbaguna untuk pelatihan staf farmasi/kasir, seminar, onboarding karyawan baru, dan rapat pleno BOD.
             </p>
           </div>
