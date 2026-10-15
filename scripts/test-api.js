@@ -48,7 +48,7 @@ async function runTests() {
   try {
     await createBooking({
       roomId: 'ruang-b',
-      date: '2026-09-26', // Sabtu
+      date: '2026-10-17', // Sabtu
       startTime: '09:00',
       endTime: '11:00',
       name: 'Test Weekend',
@@ -64,7 +64,13 @@ async function runTests() {
 
   // 5. Booking Creation Success (Future Weekday)
   console.log('Test 5: Create Valid Booking (Future Weekday)');
-  const testDate = '2026-10-05'; // Senin
+  // Hitung hari kerja di masa depan secara dinamis
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 7);
+  while (futureDate.getDay() === 0 || futureDate.getDay() === 6) {
+    futureDate.setDate(futureDate.getDate() + 1);
+  }
+  const testDate = futureDate.toISOString().slice(0, 10);
   const bookingRes = await createBooking({
     roomId: 'ruang-b',
     date: testDate,

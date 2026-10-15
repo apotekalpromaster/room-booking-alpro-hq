@@ -33,23 +33,25 @@ Aplikasi internal berbasis web untuk pemesanan terpusat 8 ruang meeting Kantor P
 
 ---
 
-## 🏬 Divisi / Departemen Pemesan (14 Divisi)
+## 🏬 Divisi / Departemen Pemesan (16 Divisi)
 
-Formulir pemesanan mendukung 14 entitas departemen resmi di lingkungan Apotek Alpro:
+Formulir pemesanan mendukung 16 entitas departemen resmi di lingkungan Apotek Alpro:
 1. Academy
 2. BOD (Board of Directors)
 3. BPT (Branding, Promotion, & Trade)
-4. E-Commerce
-5. Finance & Accounting
-6. Legal
-7. Operation Excellence
-8. Operation Sales
-9. OSS (Operation Support & Service)
-10. PCD (Professional Care & Development)
-11. People Management
-12. PPR (Pharmacy Practice & Regulatory)
-13. Procurement
-14. SGM (Sales & Geo Marketing)
+4. Busdev
+5. E-Commerce
+6. Finance & Accounting
+7. Legal
+8. Operation Excellence
+9. Operation Sales
+10. OSS (Operation Support & Service)
+11. PCD (Professional Care & Development)
+12. People Management
+13. PPR (Pharmacy Practice & Regulatory)
+14. Procurement
+15. SGM (Sales & Geo Marketing)
+16. Sitedev
 
 ---
 

@@ -7,6 +7,7 @@ const DIVISI_SUGGESTIONS = [
   'Academy',
   'BOD (Board of Directors)',
   'BPT (Branding, Promotion, & Trade)',
+  'Busdev',
   'E-Commerce',
   'Finance & Accounting',
   'Legal',
@@ -18,6 +19,7 @@ const DIVISI_SUGGESTIONS = [
   'PPR (Pharmacy Practice & Regulatory)',
   'Procurement',
   'SGM (Sales & Geo Marketing)',
+  'Sitedev',
 ];
 
 export default function BookingModal({
