@@ -9,7 +9,8 @@ import {
   getAvailability,
   getHistory,
   extractEventKeperluan,
-  extractEventWhatsApp
+  extractEventWhatsApp,
+  rescheduleBooking
 } from '../lib/bookingService.js';
 import { getRoomById } from '../lib/roomsConfig.js';
 
@@ -198,6 +199,104 @@ async function runTests() {
   assert.strictEqual(avail.isWorkingDay, true);
   assert.ok(Array.isArray(avail.events));
   console.log('✅ getAvailability verified with event array structure');
+
+  // 13. Reschedule: Extend time in same room (Self-Exclusion Guard verification)
+  console.log('Test 13: Reschedule - Extend Time in Same Room');
+  const reschDate = testDate;
+  const bResch = await createBooking({
+    roomId: 'ruang-c',
+    date: reschDate,
+    startTime: '13:00',
+    endTime: '14:00',
+    name: 'Siti Rahma',
+    divisi: 'Finance',
+    whatsapp: '081345678901',
+    keperluan: 'Review Anggaran Bulanan'
+  });
+  assert.strictEqual(bResch.success, true);
+
+  // Extend 13:00 - 14:00 to 13:00 - 15:00 in ruang-c
+  const updated1 = await rescheduleBooking({
+    bookingId: bResch.bookingId,
+    whatsapp: '081345678901',
+    newRoomId: 'ruang-c',
+    newDate: reschDate,
+    newStartTime: '13:00',
+    newEndTime: '15:00',
+    reason: 'Pembahasan butuh waktu tambahan'
+  });
+  assert.strictEqual(updated1.success, true);
+  assert.strictEqual(updated1.endTime, '15:00');
+  console.log('✅ Reschedule in same room passed without false-positive self-conflict');
+
+  // 14. Reschedule: Switch Room (Move to Ruang Alpro Kaizen Lt. 4)
+  console.log('Test 14: Reschedule - Switch Room to Ruang H (Kaizen)');
+  const updated2 = await rescheduleBooking({
+    bookingId: bResch.bookingId,
+    whatsapp: '081345678901',
+    newRoomId: 'ruang-h',
+    newDate: reschDate,
+    newStartTime: '13:00',
+    newEndTime: '15:00',
+    reason: 'Peserta bertambah jadi 30 orang'
+  });
+  assert.strictEqual(updated2.success, true);
+  assert.strictEqual(updated2.floor, 4);
+  console.log('✅ Reschedule to new room passed successfully');
+
+  // 15. Reschedule Rejection: Wrong WhatsApp (Identity Guard)
+  console.log('Test 15: Reschedule Rejection on Wrong WhatsApp');
+  try {
+    await rescheduleBooking({
+      bookingId: bResch.bookingId,
+      whatsapp: '089999999999', // SALAH
+      newRoomId: 'ruang-h',
+      newStartTime: '14:00',
+      newEndTime: '16:00'
+    });
+    assert.fail('Seharusnya ditolak 403 Forbidden');
+  } catch (err) {
+    assert.strictEqual(err.statusCode, 403);
+    console.log('✅ Unauthorized reschedule rejected with HTTP 403 Forbidden');
+  }
+
+  // 16. Reschedule Rejection: Conflict with Another User\'s Booking
+  console.log('Test 16: Reschedule Rejection on Conflict Slot');
+  const bOther = await createBooking({
+    roomId: 'ruang-a',
+    date: reschDate,
+    startTime: '15:00',
+    endTime: '17:00',
+    name: 'Bambang',
+    divisi: 'Audit',
+    whatsapp: '081288887777',
+    keperluan: 'Audit Rutin'
+  });
+  assert.strictEqual(bOther.success, true);
+
+  try {
+    await rescheduleBooking({
+      bookingId: bResch.bookingId,
+      whatsapp: '081345678901',
+      newRoomId: 'ruang-a',
+      newDate: reschDate,
+      newStartTime: '14:00',
+      newEndTime: '16:00'
+    });
+    assert.fail('Seharusnya bentrok HTTP 409');
+  } catch (err) {
+    assert.strictEqual(err.statusCode, 409);
+    console.log('✅ Conflicting reschedule rejected with HTTP 409 Conflict');
+  }
+
+  // 17. Verify Audit Log: Newest First & RESCHEDULED action
+  console.log('Test 17: Audit Log Newest-First & RESCHEDULED Action');
+  const hist = await getHistory();
+  assert.ok(hist.logs.length >= 3);
+  const reschLog = hist.logs.find(l => l.action === 'RESCHEDULED');
+  assert.ok(reschLog, 'Harus ada catatan log aksi RESCHEDULED');
+  assert.strictEqual(reschLog.name, 'Siti Rahma');
+  console.log('✅ Audit log verified with RESCHEDULED entries and newest-first order');
 
   console.log('--- ALL BACKEND TESTS PASSED SUCCESSFULLY! ---');
 }

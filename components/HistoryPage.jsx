@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   History,
   Search,
@@ -11,7 +11,10 @@ import {
   Building2,
   Phone,
   Clock,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown
 } from 'lucide-react';
 import { useToast } from './Toast';
 
@@ -23,6 +26,11 @@ export default function HistoryPage({ rooms = [] }) {
   const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedFloor, setSelectedFloor] = useState('');
   const [selectedAction, setSelectedAction] = useState('');
+  
+  // Pagination & Sorting State
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' (Terbaru) | 'asc' (Terlama)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10); // 10, 25, 50
 
   async function fetchHistory() {
     setLoading(true);
@@ -38,6 +46,7 @@ export default function HistoryPage({ rooms = [] }) {
 
       if (data.success) {
         setLogs(data.logs || []);
+        setCurrentPage(1); // Reset ke halaman 1 setiap kali query baru
       } else {
         throw new Error(data.message || 'Gagal memuat riwayat.');
       }
@@ -52,9 +61,23 @@ export default function HistoryPage({ rooms = [] }) {
     fetchHistory();
   }, [selectedRoom, selectedFloor, selectedAction]);
 
-  // Export CSV
+  // Sorting: Default 'desc' (data API sudah di-reverse di backend dari Google Sheet)
+  const sortedLogs = useMemo(() => {
+    if (sortOrder === 'desc') return logs;
+    return [...logs].reverse();
+  }, [logs, sortOrder]);
+
+  // Pagination calculation
+  const totalRecords = sortedLogs.length;
+  const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalRecords);
+  const paginatedLogs = sortedLogs.slice(startIndex, endIndex);
+
+  // Export CSV (Mengekspor seluruh data hasil filter, bukan hanya 1 halaman)
   function handleExportCsv() {
-    if (logs.length === 0) {
+    if (sortedLogs.length === 0) {
       addToast({ type: 'warning', message: 'Tidak ada data log untuk diekspor.' });
       return;
     }
@@ -70,10 +93,10 @@ export default function HistoryPage({ rooms = [] }) {
       'No WhatsApp',
       'Slot Waktu',
       'Keperluan',
-      'Alasan Cancel'
+      'Alasan Cancel / Reschedule'
     ];
 
-    const rows = logs.map(l => [
+    const rows = sortedLogs.map(l => [
       `"${l.timestamp}"`,
       `"${l.bookingId}"`,
       `"${l.roomName}"`,
@@ -96,7 +119,69 @@ export default function HistoryPage({ rooms = [] }) {
     link.click();
     document.body.removeChild(link);
 
-    addToast({ type: 'success', message: 'Log berhasil diekspor ke file CSV!' });
+    addToast({ type: 'success', message: `Berhasil mengekspor ${sortedLogs.length} baris log ke CSV!` });
+  }
+
+  function renderActionBadge(action) {
+    if (action === 'CREATED') {
+      return (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            padding: '3px 9px',
+            borderRadius: 9999,
+            fontSize: '11px',
+            fontWeight: 700,
+            backgroundColor: 'var(--color-success-bg)',
+            color: 'var(--color-success)',
+          }}
+        >
+          <CheckCircle2 size={12} />
+          <span>CREATED</span>
+        </span>
+      );
+    }
+    if (action === 'RESCHEDULED') {
+      return (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            padding: '3px 9px',
+            borderRadius: 9999,
+            fontSize: '11px',
+            fontWeight: 700,
+            backgroundColor: '#EFF6FF',
+            color: '#2563EB',
+            border: '1px solid #BFDBFE',
+          }}
+        >
+          <Clock size={12} />
+          <span>RESCHEDULED</span>
+        </span>
+      );
+    }
+    return (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5,
+          padding: '3px 9px',
+          borderRadius: 9999,
+          fontSize: '11px',
+          fontWeight: 700,
+          backgroundColor: 'var(--color-danger-bg)',
+          color: 'var(--color-danger)',
+        }}
+      >
+        <XCircle size={12} />
+        <span>{action}</span>
+      </span>
+    );
   }
 
   return (
@@ -121,11 +206,11 @@ export default function HistoryPage({ rooms = [] }) {
               <span>Riwayat & Audit Log Booking HQ</span>
             </h2>
             <p style={{ fontSize: '12.5px', color: '#6B7280', marginTop: 2 }}>
-              Catatan riwayat transaksi append-only terintegrasi Google Sheet (pencatatan create dan cancel)
+              Catatan riwayat transaksi append-only terintegrasi Google Sheet (pencatatan create, reschedule, dan cancel)
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button
               onClick={fetchHistory}
               style={{
@@ -139,37 +224,40 @@ export default function HistoryPage({ rooms = [] }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
+                cursor: 'pointer',
               }}
+              title="Segarkan Log"
             >
-              <RefreshCw size={15} />
-              <span>Segarkan</span>
+              <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+              <span>Refresh</span>
             </button>
 
             <button
               onClick={handleExportCsv}
               style={{
                 padding: '8px 16px',
-                borderRadius: 'var(--radius-button)',
-                border: 'none',
+                borderRadius: '8px',
                 backgroundColor: 'var(--color-primary)',
                 color: '#FFFFFF',
                 fontSize: '13px',
                 fontWeight: 600,
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                boxShadow: '0 1px 2px rgba(249, 115, 22, 0.2)',
+                gap: 6,
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(249, 115, 22, 0.25)',
               }}
             >
-              <Download size={16} />
-              <span>Ekspor CSV</span>
+              <Download size={15} />
+              <span>Ekspor Log (CSV)</span>
             </button>
           </div>
         </div>
 
-        {/* Filter Toolbar */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, paddingTop: 10, borderTop: '1px solid #F3F4F6' }}>
-          {/* Search Box */}
+        {/* Filter Bar */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+          {/* Pencarian Nama */}
           <div style={{ position: 'relative', flex: '1 1 200px' }}>
             <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
             <input
@@ -241,7 +329,30 @@ export default function HistoryPage({ rooms = [] }) {
           >
             <option value="">Semua Status Aksi</option>
             <option value="CREATED">CREATED (Booking Baru)</option>
+            <option value="RESCHEDULED">RESCHEDULED (Diubah)</option>
             <option value="CANCELLED">CANCELLED (Dibatalkan)</option>
+          </select>
+
+          {/* Sort Order Toggle */}
+          <select
+            value={sortOrder}
+            onChange={(e) => {
+              setSortOrder(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid #D1D5DB',
+              fontSize: '13px',
+              backgroundColor: '#FFFFFF',
+              color: '#374151',
+              fontWeight: 600
+            }}
+            title="Pilih Urutan Waktu"
+          >
+            <option value="desc">Terbaru ke Terlama (Default)</option>
+            <option value="asc">Terlama ke Terbaru</option>
           </select>
 
           <button
@@ -253,6 +364,8 @@ export default function HistoryPage({ rooms = [] }) {
               color: '#374151',
               fontWeight: 600,
               fontSize: '13px',
+              border: '1px solid #E5E7EB',
+              cursor: 'pointer'
             }}
           >
             Terapkan Filter
@@ -276,7 +389,7 @@ export default function HistoryPage({ rooms = [] }) {
               Memuat data log booking...
             </div>
           </div>
-        ) : logs.length === 0 ? (
+        ) : sortedLogs.length === 0 ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', color: '#9CA3AF' }}>
             <History size={40} strokeWidth={1.5} style={{ margin: '0 auto 12px', color: '#D1D5DB' }} />
             <div style={{ fontSize: '15px', fontWeight: 600, color: '#374151' }}>Belum ada catatan log</div>
@@ -286,7 +399,7 @@ export default function HistoryPage({ rooms = [] }) {
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
+            {/* Desktop Table View */}
             <div className="desktop-table-container" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                 <thead>
@@ -301,7 +414,7 @@ export default function HistoryPage({ rooms = [] }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((log, index) => {
+                  {paginatedLogs.map((log, index) => {
                     const isCreated = log.action === 'CREATED';
                     return (
                       <tr
@@ -309,28 +422,16 @@ export default function HistoryPage({ rooms = [] }) {
                         style={{
                           borderBottom: '1px solid #F3F4F6',
                           backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#FAFAFA',
+                          transition: 'background-color 0.15s ease',
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF7ED'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#FFFFFF' : '#FAFAFA'}
                       >
-                        <td style={{ padding: '12px 16px', color: '#6B7280', whiteSpace: 'nowrap', fontSize: '12px' }}>
+                        <td style={{ padding: '12px 16px', color: '#6B7280', fontSize: '12px', whiteSpace: 'nowrap' }}>
                           {log.timestamp}
                         </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 5,
-                              padding: '3px 9px',
-                              borderRadius: 9999,
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              backgroundColor: isCreated ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                              color: isCreated ? 'var(--color-success)' : 'var(--color-danger)',
-                            }}
-                          >
-                            {isCreated ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                            <span>{log.action}</span>
-                          </span>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                          {renderActionBadge(log.action)}
                         </td>
                         <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827', whiteSpace: 'nowrap' }}>
                           <div>{log.roomName}</div>
@@ -349,7 +450,7 @@ export default function HistoryPage({ rooms = [] }) {
                         <td style={{ padding: '12px 16px', color: '#374151', maxWidth: 280 }}>
                           <div style={{ fontWeight: 500 }}>{log.keperluan}</div>
                           {!isCreated && log.cancelReason && log.cancelReason !== '-' && (
-                            <div style={{ fontSize: '11px', color: '#DC2626', marginTop: 2, fontStyle: 'italic' }}>
+                            <div style={{ fontSize: '11px', color: log.action === 'RESCHEDULED' ? '#2563EB' : '#DC2626', marginTop: 2, fontStyle: 'italic' }}>
                               Alasan: {log.cancelReason}
                             </div>
                           )}
@@ -363,7 +464,7 @@ export default function HistoryPage({ rooms = [] }) {
 
             {/* Mobile Card List View (<768px) */}
             <div className="mobile-table-cards" style={{ display: 'none', flexDirection: 'column', padding: 12, gap: 10 }}>
-              {logs.map((log, index) => {
+              {paginatedLogs.map((log, index) => {
                 const isCreated = log.action === 'CREATED';
                 return (
                   <div
@@ -379,22 +480,7 @@ export default function HistoryPage({ rooms = [] }) {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '3px 8px',
-                          borderRadius: 9999,
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          backgroundColor: isCreated ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                          color: isCreated ? 'var(--color-success)' : 'var(--color-danger)',
-                        }}
-                      >
-                        {isCreated ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                        <span>{log.action}</span>
-                      </span>
+                      {renderActionBadge(log.action)}
                       <span style={{ fontSize: '11px', color: '#6B7280' }}>{log.timestamp}</span>
                     </div>
 
@@ -410,7 +496,7 @@ export default function HistoryPage({ rooms = [] }) {
                     <div style={{ fontSize: '12px', color: '#374151', backgroundColor: '#F9FAFB', padding: '8px 10px', borderRadius: 6 }}>
                       {log.keperluan}
                       {!isCreated && log.cancelReason && log.cancelReason !== '-' && (
-                        <div style={{ color: '#DC2626', marginTop: 2, fontSize: '11px' }}>
+                        <div style={{ color: log.action === 'RESCHEDULED' ? '#2563EB' : '#DC2626', marginTop: 2, fontSize: '11px' }}>
                           Alasan: {log.cancelReason}
                         </div>
                       )}
@@ -418,6 +504,102 @@ export default function HistoryPage({ rooms = [] }) {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Pagination Footer Controls */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 20px',
+                borderTop: '1px solid var(--color-border)',
+                backgroundColor: '#FAFAFA',
+                gap: 12,
+              }}
+            >
+              {/* Info rentang data & page size */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12.5px', color: '#4B5563' }}>
+                  Menampilkan <strong>{totalRecords === 0 ? 0 : startIndex + 1}–{endIndex}</strong> dari <strong>{totalRecords}</strong> catatan
+                </span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <label htmlFor="pageSizeSelect" style={{ fontSize: '12px', color: '#6B7280' }}>Baris per halaman:</label>
+                  <select
+                    id="pageSizeSelect"
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid #D1D5DB',
+                      fontSize: '12px',
+                      backgroundColor: '#FFFFFF',
+                      color: '#374151'
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Tombol Navigasi Halaman */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={safeCurrentPage <= 1}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: safeCurrentPage <= 1 ? '#F3F4F6' : '#FFFFFF',
+                    color: safeCurrentPage <= 1 ? '#9CA3AF' : '#374151',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    cursor: safeCurrentPage <= 1 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <ChevronLeft size={16} />
+                  <span>Sebelumnya</span>
+                </button>
+
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151', padding: '0 8px' }}>
+                  Halaman {safeCurrentPage} dari {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={safeCurrentPage >= totalPages}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: safeCurrentPage >= totalPages ? '#F3F4F6' : '#FFFFFF',
+                    color: safeCurrentPage >= totalPages ? '#9CA3AF' : '#374151',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    cursor: safeCurrentPage >= totalPages ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <span>Berikutnya</span>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           </>
         )}
