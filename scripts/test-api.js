@@ -7,7 +7,9 @@ import {
   createBooking,
   cancelBooking,
   getAvailability,
-  getHistory
+  getHistory,
+  extractEventKeperluan,
+  extractEventWhatsApp
 } from '../lib/bookingService.js';
 import { getRoomById } from '../lib/roomsConfig.js';
 
@@ -146,6 +148,56 @@ async function runTests() {
   assert.ok(ruangH, 'Ruang H harus ditemukan');
   assert.strictEqual(ruangH.capacity, 35, 'Kapasitas Ruang Alpro Kaizen harus 35 orang');
   console.log('✅ Ruang Alpro Kaizen (Lt. 4) capacity verified: 35 orang');
+
+  // 10. Parser Verification: Legacy Google Calendar Event (Hilma format / backward compatibility)
+  console.log('Test 10: Legacy Event Extraction (Hilma format)');
+  const legacyEvent = {
+    summary: '[Ruang Welcoming (Lt. 1)] Diskusi Rencana Kerja Divisi',
+    description: 'Dipesan oleh: Hilma\nDivisi: People Management\nNo. WhatsApp: 081234567890\nLantai: 1 (Eksternal / Tamu Luar)\nBooking ID: BK-MVD9K8VH-VA2F',
+    extendedProperties: {
+      private: {
+        roomId: 'ruang-b',
+        bookedByName: 'Hilma',
+        bookedByDivisi: 'People Management',
+        bookedByWa: '081234567890',
+        bookingId: 'BK-MVD9K8VH-VA2F',
+        floor: '1'
+      }
+    }
+  };
+  const extractedKeperluanLegacy = extractEventKeperluan(legacyEvent);
+  const extractedWaLegacy = extractEventWhatsApp(legacyEvent);
+  assert.strictEqual(extractedKeperluanLegacy, 'Diskusi Rencana Kerja Divisi');
+  assert.strictEqual(extractedWaLegacy, '081234567890');
+  console.log('✅ Legacy Google Calendar event correctly extracts actual meeting purpose & WhatsApp');
+
+  // 11. Parser Verification: New Google Calendar Event
+  console.log('Test 11: New Event Extraction');
+  const newEvent = {
+    summary: '[Ruang Genuine (Lt. 1)] Presentasi Vendor Mesin POS',
+    description: 'Keperluan: Presentasi Vendor Mesin POS\nDipesan oleh: Budi\nDivisi: Procurement\nNo. WhatsApp: 081299998888\nLantai: 1\nBooking ID: BK-NEW123',
+    extendedProperties: {
+      private: {
+        roomId: 'ruang-a',
+        bookedByName: 'Budi',
+        bookedByDivisi: 'Procurement',
+        bookedByWa: '081299998888',
+        bookingId: 'BK-NEW123',
+        floor: '1',
+        keperluan: 'Presentasi Vendor Mesin POS'
+      }
+    }
+  };
+  assert.strictEqual(extractEventKeperluan(newEvent), 'Presentasi Vendor Mesin POS');
+  assert.strictEqual(extractEventWhatsApp(newEvent), '081299998888');
+  console.log('✅ New Google Calendar event correctly extracts purpose from private props & description');
+
+  // 12. Verification: getAvailability returns keperluan & whatsapp
+  console.log('Test 12: getAvailability returns keperluan and whatsapp');
+  const avail = await getAvailability(testDate);
+  assert.strictEqual(avail.isWorkingDay, true);
+  assert.ok(Array.isArray(avail.events));
+  console.log('✅ getAvailability verified with event array structure');
 
   console.log('--- ALL BACKEND TESTS PASSED SUCCESSFULLY! ---');
 }
